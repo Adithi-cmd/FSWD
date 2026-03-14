@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Console Challenge</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .box {
+      background: #ffffff;
+      border: 2px solid #1b7a8a;
+      border-radius: 12px;
+      padding: 40px 48px;
+      text-align: center;
+      max-width: 420px;
+    }
+
+    h1 {
+      color: #0b2545;
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #555;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    code {
+      background: #e8f4f8;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 14px;
+      color: #1b7a8a;
+    }
+
+    .tip {
+      margin-top: 20px;
+      font-size: 13px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="box">
+    <h1>Console Challenge 🖥️</h1>
+    <p>Open the browser console to see the calculator results.</p>
+    <p>Press <code>F12</code> → click <strong>Console</strong> tab</p>
+    <p class="tip">All calculator operations are printed there!</p>
+  </div>
+
+  <script>
+
+    // ── Two numbers to work with ──
+    var a = 20;
+    var b = 5;
+
+    console.log("===== Calculator Operations =====");
+    console.log("a =", a, "  b =", b);
+    console.log("---------------------------------");
+
+    // 1. Addition
+    var add = a + b;
+    console.log("Addition      : " + a + " + " + b + " = " + add);
+
+    // 2. Subtraction
+    var sub = a - b;
+    console.log("Subtraction   : " + a + " - " + b + " = " + sub);
+
+    // 3. Multiplication
+    var mul = a * b;
+    console.log("Multiplication: " + a + " * " + b + " = " + mul);
+
+    // 4. Division
+    var div = a / b;
+    console.log("Division      : " + a + " / " + b + " = " + div);
+
+    // 5. Modulus (remainder)
+    var mod = a % b;
+    console.log("Modulus       : " + a + " % " + b + " = " + mod);
+
+    // 6. Exponentiation (power)
+    var exp = a ** b;
+    console.log("Exponentiation: " + a + " ** " + b + " = " + exp);
+
+    console.log("---------------------------------");
+    console.log("===== Done! =====");
+
+  </script>
+
+</body>
+</html>
