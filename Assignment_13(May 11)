@@ -1,0 +1,162 @@
+import { useState } from "react";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Link,
+  useNavigate,
+} from "react-router-dom";
+
+// ─────────────────────────────
+//  NAVBAR — shown on every page
+// ─────────────────────────────
+function Navbar() {
+  return (
+    <nav style={{
+      background: "#0b2545",
+      padding: "14px 32px",
+      display: "flex",
+      gap: "24px",
+      alignItems: "center",
+    }}>
+      <span style={{ color: "#ffffff", fontWeight: "bold", fontSize: "18px", marginRight: "auto" }}>
+        MyApp
+      </span>
+      <Link to="/"        style={linkStyle}>Home</Link>
+      <Link to="/about"   style={linkStyle}>About</Link>
+      <Link to="/contact" style={linkStyle}>Contact</Link>
+    </nav>
+  );
+}
+
+const linkStyle = {
+  color: "#a8c8d8",
+  textDecoration: "none",
+  fontSize: "15px",
+};
+
+// ─────────────────────────────
+//  PAGE 1 — Home
+// ─────────────────────────────
+function Home() {
+  const navigate = useNavigate();
+  return (
+    <div style={pageStyle}>
+      <h1 style={headingStyle}>Welcome Home 🏠</h1>
+      <p style={paraStyle}>This is the Home page of our Multi-Page React App.</p>
+      <button onClick={() => navigate("/about")} style={btnStyle}>
+        Go to About →
+      </button>
+    </div>
+  );
+}
+
+// ─────────────────────────────
+//  PAGE 2 — About
+// ─────────────────────────────
+function About() {
+  return (
+    <div style={pageStyle}>
+      <h1 style={headingStyle}>About Us 👩‍💻</h1>
+      <p style={paraStyle}>
+        This app is built by <strong>Adithi Uday Pai</strong>, an
+        Information Science and Engineering student at GIT Belgaum.
+      </p>
+      <p style={paraStyle}>Built with React + React Router.</p>
+    </div>
+  );
+}
+
+// ─────────────────────────────
+//  PAGE 3 — Contact
+// ─────────────────────────────
+function Contact() {
+  const [sent, setSent] = useState(false);
+  return (
+    <div style={pageStyle}>
+      <h1 style={headingStyle}>Contact 📬</h1>
+      {sent ? (
+        <p style={{ color: "#10b981", fontSize: "16px" }}>
+          Message sent! Thank you.
+        </p>
+      ) : (
+        <>
+          <input  placeholder="Your name"    style={inputStyle} />
+          <input  placeholder="Your email"   style={inputStyle} />
+          <textarea placeholder="Your message" rows={4} style={{ ...inputStyle, resize: "none" }} />
+          <button onClick={() => setSent(true)} style={btnStyle}>
+            Send Message
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────
+//  404 — Not Found
+// ─────────────────────────────
+function NotFound() {
+  return (
+    <div style={pageStyle}>
+      <h1 style={headingStyle}>404 — Page Not Found</h1>
+      <Link to="/" style={{ color: "#0b2545" }}>Go back home</Link>
+    </div>
+  );
+}
+
+// ─────────────────────────────
+//  SHARED STYLES
+// ─────────────────────────────
+const pageStyle = {
+  maxWidth: "500px",
+  margin: "60px auto",
+  padding: "32px",
+  background: "#ffffff",
+  borderRadius: "12px",
+  boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+  fontFamily: "Arial, sans-serif",
+  display: "flex",
+  flexDirection: "column",
+  gap: "14px",
+};
+
+const headingStyle = { color: "#0b2545", fontSize: "24px" };
+const paraStyle    = { color: "#475569", fontSize: "15px", lineHeight: "1.7" };
+const inputStyle   = {
+  padding: "10px 14px",
+  borderRadius: "8px",
+  border: "1px solid #cbd5e1",
+  fontSize: "14px",
+  width: "100%",
+  outline: "none",
+};
+const btnStyle = {
+  padding: "10px 24px",
+  background: "#0b2545",
+  color: "#ffffff",
+  border: "none",
+  borderRadius: "8px",
+  fontSize: "14px",
+  cursor: "pointer",
+  alignSelf: "flex-start",
+};
+
+// ─────────────────────────────
+//  APP — Router setup
+// ─────────────────────────────
+export default function App() {
+  return (
+    <BrowserRouter>
+      <div style={{ minHeight: "100vh", background: "#f0f4f8" }}>
+        <Navbar />
+        <Routes>
+          <Route path="/"        element={<Home />}     />
+          <Route path="/about"   element={<About />}    />
+          <Route path="/contact" element={<Contact />}  />
+          <Route path="*"        element={<NotFound />} />
+        </Routes>
+      </div>
+    </BrowserRouter>
+  );
+}
