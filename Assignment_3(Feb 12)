@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Adithi Uday Pai</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+
+    h1 { color: #2c3e50; }
+    h2 { color: #c0392b; border-bottom: 2px solid #c0392b; padding-bottom: 5px; margin-top: 30px; }
+
+    img {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-top: 10px;
+    }
+
+    p { line-height: 1.7; }
+
+    ul { line-height: 2; }
+
+    a { color: #c0392b; }
+
+    .info { margin: 6px 0; }
+  </style>
+</head>
+<body>
+
+  <h1>Adithi Uday Pai</h1>
+  <p class="info">📍 Belgaum, Karnataka</p>
+  <p class="info">📧 <a href="mailto:adithiudaypai24@gmail.com">adithiudaypai24@gmail.com</a></p>
+  <p class="info">🔗 <a href="https://linkedin.com/in/adithi-uday-pai-4b056b25b" target="_blank">LinkedIn Profile</a></p>
+
+  <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&q=80" alt="Profile Photo of Adithi" />
+
+  <h2>About Me</h2>
+  <p>
+    Hi! I'm Adithi, an Information Science Engineering student at Gogte Institute of Technology, Belgaum. I enjoy building web applications and exploring new technologies like cloud computing and generative AI. Outside of tech, I have trained in Hindustani classical music and Bharatanatyam for over 10 years.
+  </p>
+
+  <h2>Education</h2>
+  <ul>
+    <li><strong>B.E. in Information Science Engineering</strong> — Gogte Institute of Technology, Belgaum (CGPA: 8.9)</li>
+    <li><strong>Class XII (PCMB)</strong> — Poornaprajna PU College, Udupi (95.71%)</li>
+    <li><strong>Class X (SSLC)</strong> — St. Thomas School, Shirali (99.04%)</li>
+  </ul>
+
+  <h2>Skills</h2>
+  <ul>
+    <li>Languages: C, Java, C++, Python</li>
+    <li>Web: HTML, CSS, JavaScript</li>
+    <li>Database: SQL, DBMS</li>
+    <li>Frameworks: Django, MERN Stack (basics)</li>
+    <li>Soft Skills: Communication, Team Leadership, Critical Thinking</li>
+  </ul>
+
+  <h2>Projects</h2>
+  <ul>
+    <li><strong>Django Learning Assistant</strong> — A learning management system built with Python, Django and SQLite</li>
+    <li><strong>PDF Analyzer with GenAI</strong> — AI-powered PDF analysis tool using OpenAI API and pyPDF2</li>
+    <li><strong>Nutriguard</strong> — Web platform that assesses nutritional health based on age, height and weight</li>
+    <li><strong>AI Chat Bot</strong> — Chatbot that understands natural language queries, built with HTML/CSS/JS</li>
+  </ul>
+
+  <h2>Hobbies &amp; Interests</h2>
+  <ul>
+    <li>🎵 Hindustani Classical Music (10+ years, Sur Sagar Fellowship recipient)</li>
+    <li>💃 Bharatanatyam dance</li>
+    <li>☁️ Cloud Computing &amp; Full-Stack Development</li>
+    <li>🤝 NSS Volunteer — community service and social outreach</li>
+  </ul>
+
+  <h2>Useful Links</h2>
+  <ul>
+    <li><a href="https://linkedin.com/in/adithi-uday-pai-4b056b25b" target="_blank">LinkedIn</a></li>
+    <li><a href="mailto:adithiudaypai24@gmail.com">Email Me</a></li>
+    <li><a href="https://www.npmjs.com" target="_blank">NPM (for Django projects)</a></li>
+    <li><a href="https://developer.mozilla.org" target="_blank">MDN Web Docs</a></li>
+  </ul>
+
+</body>
+</html>
