@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Student Manager</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f8;
+      padding: 40px 20px;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      color: #0b2545;
+      margin-bottom: 30px;
+    }
+
+    table {
+      width: 100%;
+      max-width: 700px;
+      margin: 0 auto;
+      border-collapse: collapse;
+      background: #ffffff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    th {
+      background-color: #0b2545;
+      color: #ffffff;
+      padding: 14px 18px;
+      text-align: left;
+      font-size: 15px;
+    }
+
+    td {
+      padding: 12px 18px;
+      font-size: 14px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f0f4f8;
+    }
+
+    .average {
+      font-weight: bold;
+      color: #1b7a8a;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📋 Student Manager</h1>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Marks</th>
+        <th>Total</th>
+        <th>Average</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody">
+    </tbody>
+  </table>
+
+  <script>
+
+    // ── Array of student objects ──
+    var students = [
+      { name: "Adithi",  marks: [88, 92, 76, 95, 84] },
+      { name: "Riya",    marks: [70, 65, 80, 72, 68] },
+      { name: "Kiran",   marks: [90, 95, 88, 92, 97] },
+      { name: "Sneha",   marks: [55, 60, 58, 62, 50] }
+    ];
+
+    var tbody = document.getElementById("tableBody");
+
+    // ── Loop through each student ──
+    for (var i = 0; i < students.length; i++) {
+
+      var student = students[i];
+
+      // Calculate total
+      var total = 0;
+      for (var j = 0; j < student.marks.length; j++) {
+        total = total + student.marks[j];
+      }
+
+      // Calculate average
+      var average = total / student.marks.length;
+
+      // Add row to table
+      var row = "<tr>" +
+        "<td>" + student.name + "</td>" +
+        "<td>" + student.marks.join(", ") + "</td>" +
+        "<td>" + total + "</td>" +
+        "<td class='average'>" + average.toFixed(2) + "</td>" +
+      "</tr>";
+
+      tbody.innerHTML += row;
+    }
+
+  </script>
+
+</body>
+</html>
