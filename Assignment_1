@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adithi Uday Pai - Resume</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 40px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        header {
+            text-align: center;
+            border-bottom: 3px solid #2c3e50;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .contact-info {
+            color: #555;
+            font-size: 0.9em;
+        }
+        
+        .contact-info a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        
+        .summary {
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-left: 4px solid #3498db;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+        
+        section {
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        h3 {
+            color: #34495e;
+            margin-bottom: 5px;
+        }
+        
+        .education-item, .experience-item, .project-item, .cert-item {
+            margin-bottom: 20px;
+        }
+        
+        .education-item h3, .experience-item h3, .project-item h3 {
+            font-size: 1.1em;
+        }
+        
+        .details {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        
+        .description {
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+        
+        ul {
+            margin-left: 20px;
+            margin-top: 5px;
+        }
+        
+        li {
+            margin-bottom: 5px;
+        }
+        
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        
+        .skill-category {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        
+        .skill-category h4 {
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .tech-stack {
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 0.85em;
+        }
+        
+        @media print {
+            body {
+                background-color: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ADITHI UDAY PAI</h1>
+            <div class="contact-info">
+                <p>+91 63638 67167 | <a href="mailto:adithiudaypai24@gmail.com">adithiudaypai24@gmail.com</a></p>
+                <p><a href="https://linkedin.com/in/adithi-uday-pai-4b056b25b" target="_blank">LinkedIn Profile</a> | Belgaum, Karnataka</p>
+            </div>
+        </header>
+
+        <div class="summary">
+            A passionate tech learner and Information Science Engineering student with technical skills in C, Java, Data Structures, 
+            and DBMS, combined with strong interpersonal abilities. Seeking an opportunity in a development-focused company to 
+            build scalable solutions while continuously learning and evolving in a dynamic environment.
+        </div>
+
+        <section id="education">
+            <h2>EDUCATION</h2>
+            <div class="education-item">
+                <h3>Bachelor of Engineering in Information Science</h3>
+                <div class="details">Gogte Institute of Technology, Belgaum, Karnataka, India</div>
+                <div class="details">Expected Graduation: December 2026 | CGPA: 8.9</div>
+            </div>
+            <div class="education-item">
+                <h3>Pre-University Education (XII), PCMB</h3>
+                <div class="details">Poornaprajna PU College (PPC), Udupi, Karnataka, India</div>
+                <div class="details">Completed: June 2022 | Percentage: 95.71%</div>
+            </div>
+            <div class="education-item">
+                <h3>SSLC (X)</h3>
+                <div class="details">St. Thomas School, Shirali, Uttara Kannada, Karnataka, India</div>
+                <div class="details">Completed: July 2020 | Percentage: 99.04%</div>
+            </div>
+        </section>
+
+        <section id="experience">
+            <h2>EXPERIENCE</h2>
+            <div class="experience-item">
+                <h3>Full Stack Web Development | DLithe</h3>
+                <div class="details">May 2025</div>
+                <div class="description">
+                    Gained foundational MERN stack skills through an intensive training program. Worked on front-end, back-end and database integration for dynamic projects.
+                </div>
+            </div>
+        </section>
+
+        <section id="certifications">
+            <h2>CERTIFICATIONS</h2>
+            <div class="cert-item">
+                <h3>Cloud Computing | NPTEL</h3>
+                <div class="description">Certified in Cloud Computing by NPTEL under Skill India, covering core cloud concepts and services.</div>
+            </div>
+            <div class="cert-item">
+                <h3>Java Technology Stack | Infosys Springboard</h3>
+                <div class="description">Trained in the Java technology stack, including Programming with Java, DBMS, NoSQL Databases, Agile Scrum, and DSA.</div>
+            </div>
+            <div class="cert-item">
+                <h3>Linux Essential | NDG</h3>
+                <div class="description">Completed a certification in essential Linux Operating System concepts.</div>
+            </div>
+            <div class="cert-item">
+                <h3>SQL and Relational Databases | IBM</h3>
+                <div class="description">Successfully finished a comprehensive course on relational databases through IBM Cognitive Class.</div>
+            </div>
+        </section>
+
+        <section id="projects">
+            <h2>PROJECTS</h2>
+            <div class="project-item">
+                <h3>Django Learning Assistant</h3>
+                <div class="tech-stack">Tech Stack: Python, Django, SQLite, HTML/CSS</div>
+                <div class="description">
+                    Built a learning management system with subject organization, learning paths, and resource tracking using Django (MVT) and SQLite.
+                </div>
+            </div>
+            <div class="project-item">
+                <h3>PDF Analyzer with Generative AI</h3>
+                <div class="tech-stack">Tech Stack: Python, pyPDF2, OpenAI API</div>
+                <div class="description">
+                    Developed an AI-powered PDF analysis pipeline using pyPDF2 and OpenAI API to extract, summarize and generate insights. Implemented modular scripts with Python in a virtual environment.
+                </div>
+            </div>
+            <div class="project-item">
+                <h3>Nutriguard</h3>
+                <div class="tech-stack">Tech Stack: Web Technologies</div>
+                <div class="description">
+                    Developed NutriGuard, a web-based platform that analyzes age, height, and weight to assess nutritional health. It classifies users as Malnourished, Healthy or Needs Improvement, offering age-based dietary suggestions to support preventive healthcare through a simple, user-friendly interface.
+                </div>
+            </div>
+            <div class="project-item">
+                <h3>AI Chat Bot</h3>
+                <div class="tech-stack">Tech Stack: HTML, CSS, JavaScript</div>
+                <div class="description">
+                    Developed an AI-powered chatbot capable of understanding natural language queries and providing contextual responses.
+                </div>
+            </div>
+        </section>
+
+        <section id="skills">
+            <h2>SKILLS</h2>
+            <div class="skills-grid">
+                <div class="skill-category">
+                    <h4>Technical Skills</h4>
+                    <p>Database Management System (SQL), Operating Systems, HTML</p>
+                </div>
+                <div class="skill-category">
+                    <h4>Programming Languages</h4>
+                    <p>C, Java, C++</p>
+                </div>
+                <div class="skill-category">
+                    <h4>Soft Skills</h4>
+                    <p>Communication, Team Leadership, Critical Thinking</p>
+                </div>
+                <div class="skill-category">
+                    <h4>Field of Interest</h4>
+                    <p>Computer Networking, Full-Stack Development, Cloud Computing, Software Development</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="activities">
+            <h2>EXTRACURRICULAR ACTIVITIES</h2>
+            <ul>
+                <li>Trained in Hindustani Classical Music and Bharatanatyam for over 10 years</li>
+                <li>Recipient of Sur Sagar Fellowship, Bangalore, for excellence in classical music</li>
+                <li>Winner, Classical Vocal – Waves, National Techno-Cultural Fest, BITS Pilani Goa</li>
+                <li>NSS Volunteer – Participated in community service, awareness drives, and social outreach programs</li>
+            </ul>
+        </section>
+
+        <section id="languages">
+            <h2>LANGUAGES</h2>
+            <p><strong>Native/Bilingual Proficiency:</strong> Kannada, Hindi, Konkani</p>
+            <p><strong>Working Proficiency:</strong> English</p>
+            <p><strong>Limited Working Proficiency:</strong> Marathi</p>
+        </section>
+    </div>
+</body>
+</html>
