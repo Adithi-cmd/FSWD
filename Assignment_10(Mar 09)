@@ -1,0 +1,110 @@
+import { useState } from "react";
+
+// ── Mood data ──
+const moods = [
+  { label: "Happy",   emoji: "😊", bg: "#fff9c4", color: "#f59e0b" },
+  { label: "Sad",     emoji: "😢", bg: "#dbeafe", color: "#3b82f6" },
+  { label: "Angry",   emoji: "😠", bg: "#fee2e2", color: "#ef4444" },
+  { label: "Excited", emoji: "🤩", bg: "#fce7f3", color: "#ec4899" },
+  { label: "Calm",    emoji: "😌", bg: "#d1fae5", color: "#10b981" },
+  { label: "Tired",   emoji: "😴", bg: "#ede9fe", color: "#8b5cf6" },
+];
+
+export default function MoodTracker() {
+
+  // ── State ──
+  const [selectedMood, setSelectedMood] = useState(null);
+
+  return (
+    <div style={{
+      minHeight: "100vh",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      background: selectedMood ? selectedMood.bg : "#f8fafc",
+      transition: "background 0.4s ease",
+      fontFamily: "Arial, sans-serif",
+      padding: "20px",
+    }}>
+
+      {/* Title */}
+      <h1 style={{ fontSize: "28px", marginBottom: "8px", color: "#1e293b" }}>
+        Mood Tracker
+      </h1>
+      <p style={{ color: "#64748b", marginBottom: "32px", fontSize: "15px" }}>
+        How are you feeling today?
+      </p>
+
+      {/* Mood Buttons */}
+      <div style={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: "16px",
+        justifyContent: "center",
+        marginBottom: "40px",
+      }}>
+        {moods.map((mood) => (
+          <button
+            key={mood.label}
+            onClick={() => setSelectedMood(mood)}
+            style={{
+              padding: "16px 24px",
+              fontSize: "16px",
+              borderRadius: "12px",
+              border: selectedMood?.label === mood.label
+                ? `3px solid ${mood.color}`
+                : "3px solid transparent",
+              background: "#ffffff",
+              cursor: "pointer",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+              transform: selectedMood?.label === mood.label ? "scale(1.1)" : "scale(1)",
+              transition: "all 0.2s ease",
+            }}
+          >
+            <div style={{ fontSize: "32px" }}>{mood.emoji}</div>
+            <div style={{ marginTop: "6px", color: "#334155", fontWeight: "500" }}>
+              {mood.label}
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {/* Result Box — only shows when a mood is selected */}
+      {selectedMood && (
+        <div style={{
+          background: "#ffffff",
+          borderRadius: "16px",
+          padding: "24px 40px",
+          textAlign: "center",
+          boxShadow: "0 4px 16px rgba(0,0,0,0.10)",
+          borderTop: `4px solid ${selectedMood.color}`,
+        }}>
+          <div style={{ fontSize: "48px" }}>{selectedMood.emoji}</div>
+          <h2 style={{ color: selectedMood.color, fontSize: "22px", margin: "10px 0 4px" }}>
+            You are feeling {selectedMood.label}!
+          </h2>
+          <p style={{ color: "#64748b", fontSize: "14px" }}>
+            Your mood has been saved. Take care of yourself!
+          </p>
+          <button
+            onClick={() => setSelectedMood(null)}
+            style={{
+              marginTop: "16px",
+              padding: "8px 20px",
+              borderRadius: "8px",
+              border: `1px solid ${selectedMood.color}`,
+              background: "transparent",
+              color: selectedMood.color,
+              cursor: "pointer",
+              fontSize: "14px",
+            }}
+          >
+            Reset
+          </button>
+        </div>
+      )}
+
+    </div>
+  );
+}
