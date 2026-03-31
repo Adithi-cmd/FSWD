@@ -1,0 +1,62 @@
+const mongoose = require("mongoose");
+
+// ── USER SCHEMA ───────────────────────────────────────
+const userSchema = new mongoose.Schema(
+  {
+    name:     { type: String, required: true, trim: true },
+    email:    { type: String, required: true, unique: true, lowercase: true, trim: true },
+    password: { type: String, required: true },
+    avatar:   { type: String, default: "" },
+    bio:      { type: String, default: "" },
+    role:     { type: String, enum: ["user", "author", "admin"], default: "user" },
+  },
+  { timestamps: true }
+);
+
+// ── CATEGORY SCHEMA ───────────────────────────────────
+const categorySchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, unique: true, trim: true },
+    slug: { type: String, required: true, unique: true, lowercase: true },
+  },
+  { timestamps: true }
+);
+
+// ── COMMENT SCHEMA ────────────────────────────────────
+const commentSchema = new mongoose.Schema(
+  {
+    post:    { type: mongoose.Schema.Types.ObjectId, ref: "Post", required: true },
+    author:  { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    content: { type: String, required: true, trim: true },
+    likes:   [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  },
+  { timestamps: true }
+);
+
+// ── POST SCHEMA ───────────────────────────────────────
+const postSchema = new mongoose.Schema(
+  {
+    title:      { type: String, required: true, trim: true },
+    slug:       { type: String, required: true, unique: true, lowercase: true },
+    content:    { type: String, required: true },
+    excerpt:    { type: String, default: "" },
+    coverImage: { type: String, default: "" },
+    author:     { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    category:   { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
+    tags:       [{ type: String, trim: true }],
+    status:     { type: String, enum: ["draft", "published", "archived"], default: "draft" },
+    likes:      [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    views:      { type: Number, default: 0 },
+    comments:   [{ type: mongoose.Schema.Types.ObjectId, ref: "Comment" }],
+    publishedAt:{ type: Date, default: null },
+  },
+  { timestamps: true }
+);
+
+// ── MODELS ────────────────────────────────────────────
+const User     = mongoose.model("User",     userSchema);
+const Category = mongoose.model("Category", categorySchema);
+const Comment  = mongoose.model("Comment",  commentSchema);
+const Post     = mongoose.model("Post",     postSchema);
+
+module.exports = { User, Category, Comment, Post };
