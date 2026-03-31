@@ -1,0 +1,170 @@
+import { useState } from "react";
+
+const products = [
+  { id: 1, name: "Air Max Pulse", category: "Shoes", price: 10999, rating: 4.5, tag: "New", image: "👟", color: "#FF6B6B" },
+  { id: 2, name: "Classic Hoodie", category: "Clothing", price: 4999, rating: 4.2, tag: "Sale", image: "👕", color: "#4ECDC4" },
+  { id: 3, name: "Leather Wallet", category: "Accessories", price: 3299, rating: 4.7, tag: "", image: "👜", color: "#FFD93D" },
+  { id: 4, name: "Sport Watch", category: "Accessories", price: 16999, rating: 4.8, tag: "Hot", image: "⌚", color: "#A29BFE" },
+  { id: 5, name: "Denim Jacket", category: "Clothing", price: 7499, rating: 4.0, tag: "Sale", image: "🧥", color: "#74B9FF" },
+  { id: 6, name: "Running Shoes", category: "Shoes", price: 12499, rating: 4.6, tag: "", image: "🥿", color: "#FD79A8" },
+  { id: 7, name: "Cap Visor", category: "Accessories", price: 1999, rating: 3.9, tag: "New", image: "🧢", color: "#55EFC4" },
+  { id: 8, name: "Slim Chinos", category: "Clothing", price: 5799, rating: 4.3, tag: "", image: "👖", color: "#FDCB6E" },
+  { id: 9, name: "High Boots", category: "Shoes", price: 14999, rating: 4.5, tag: "Hot", image: "👢", color: "#E17055" },
+];
+
+const categories = ["All", "Shoes", "Clothing", "Accessories"];
+const sortOptions = ["Default", "Price: Low to High", "Price: High to Low", "Top Rated"];
+
+const tagColors = { New: "#3fb950", Sale: "#f85149", Hot: "#e3b341" };
+
+function Stars({ rating }) {
+  return (
+    <span style={{ fontSize: "0.75rem", color: "#FFD93D", letterSpacing: 1 }}>
+      {"★".repeat(Math.floor(rating))}{"☆".repeat(5 - Math.floor(rating))}
+      <span style={{ color: "#888", marginLeft: 4 }}>{rating}</span>
+    </span>
+  );
+}
+
+export default function ProductListing() {
+  const [category, setCategory] = useState("All");
+  const [sort, setSort] = useState("Default");
+  const [search, setSearch] = useState("");
+  const [cart, setCart] = useState([]);
+  const [maxPrice, setMaxPrice] = useState(20000);
+
+  const addToCart = (id) => setCart(c => c.includes(id) ? c.filter(x => x !== id) : [...c, id]);
+
+  let filtered = products
+    .filter(p => category === "All" || p.category === category)
+    .filter(p => p.price <= maxPrice)
+    .filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
+
+  if (sort === "Price: Low to High") filtered = [...filtered].sort((a, b) => a.price - b.price);
+  else if (sort === "Price: High to Low") filtered = [...filtered].sort((a, b) => b.price - a.price);
+  else if (sort === "Top Rated") filtered = [...filtered].sort((a, b) => b.rating - a.rating);
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#f4f1ed", fontFamily: "'DM Sans', sans-serif" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@700&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        .topbar { background: #1a1a2e; padding: 16px 40px; display: flex; align-items: center; justify-content: space-between; }
+        .logo { font-family: 'Playfair Display', serif; color: white; font-size: 1.5rem; letter-spacing: 1px; }
+        .cart-btn { background: #FFD93D; border: none; border-radius: 50px; padding: 8px 20px; font-weight: 600; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: transform 0.2s; }
+        .cart-btn:hover { transform: scale(1.05); }
+
+        .layout { display: flex; max-width: 1200px; margin: 0 auto; padding: 30px 20px; gap: 28px; }
+
+        .sidebar { width: 220px; flex-shrink: 0; }
+        .sidebar-card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 16px; }
+        .sidebar-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: #999; margin-bottom: 12px; font-weight: 600; }
+        .cat-btn { display: block; width: 100%; text-align: left; background: none; border: none; padding: 8px 12px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.88rem; cursor: pointer; transition: all 0.15s; color: #555; font-weight: 400; }
+        .cat-btn.active { background: #1a1a2e; color: white; font-weight: 600; }
+        .cat-btn:hover:not(.active) { background: #f4f1ed; }
+        .price-range { width: 100%; accent-color: #1a1a2e; cursor: pointer; }
+
+        .main { flex: 1; }
+        .toolbar { display: flex; gap: 12px; margin-bottom: 24px; align-items: center; flex-wrap: wrap; }
+        .search-box { flex: 1; min-width: 180px; padding: 10px 16px; border: 2px solid #e0ddd8; border-radius: 50px; font-family: 'DM Sans', sans-serif; font-size: 0.88rem; outline: none; transition: border 0.2s; background: white; }
+        .search-box:focus { border-color: #1a1a2e; }
+        .sort-select { padding: 10px 16px; border: 2px solid #e0ddd8; border-radius: 50px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; outline: none; background: white; cursor: pointer; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+        .card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.06); transition: transform 0.2s, box-shadow 0.2s; cursor: default; }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 8px 28px rgba(0,0,0,0.1); }
+        .card-img { height: 140px; display: flex; align-items: center; justify-content: center; font-size: 4rem; position: relative; }
+        .tag-badge { position: absolute; top: 12px; left: 12px; font-size: 0.65rem; font-weight: 700; padding: 3px 10px; border-radius: 50px; color: white; text-transform: uppercase; letter-spacing: 0.5px; }
+        .card-body { padding: 16px; }
+        .card-cat { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 1px; color: #aaa; margin-bottom: 4px; }
+        .card-name { font-size: 0.95rem; font-weight: 600; color: #1a1a2e; margin-bottom: 6px; }
+        .card-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+        .price { font-size: 1.05rem; font-weight: 700; color: #1a1a2e; }
+        .add-btn { border: none; border-radius: 50px; padding: 7px 16px; font-size: 0.78rem; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.2s; }
+        .add-btn.in-cart { background: #1a1a2e; color: #FFD93D; }
+        .add-btn.out-cart { background: #f4f1ed; color: #1a1a2e; }
+        .add-btn:hover { transform: scale(1.05); }
+
+        .empty { text-align: center; padding: 60px 20px; color: #aaa; }
+        .empty-icon { font-size: 3rem; margin-bottom: 12px; }
+
+        @media (max-width: 640px) {
+          .layout { flex-direction: column; }
+          .sidebar { width: 100%; }
+        }
+      `}</style>
+
+      {/* Topbar */}
+      <div className="topbar">
+        <span className="logo">DRAPE.</span>
+        <button className="cart-btn">
+          🛒 Cart <span style={{ background: "#1a1a2e", color: "#FFD93D", borderRadius: "50%", width: 20, height: 20, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "0.75rem" }}>{cart.length}</span>
+        </button>
+      </div>
+
+      <div className="layout">
+        {/* Sidebar */}
+        <div className="sidebar">
+          <div className="sidebar-card">
+            <div className="sidebar-title">Category</div>
+            {categories.map(c => (
+              <button key={c} className={`cat-btn ${category === c ? "active" : ""}`} onClick={() => setCategory(c)}>{c}</button>
+            ))}
+          </div>
+          <div className="sidebar-card">
+            <div className="sidebar-title">Max Price</div>
+            <div style={{ fontSize: "1.1rem", fontWeight: 700, color: "#1a1a2e", marginBottom: 10 }}>₹{maxPrice.toLocaleString("en-IN")}</div>
+            <input type="range" className="price-range" min={1999} max={20000} value={maxPrice} onChange={e => setMaxPrice(+e.target.value)} />
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem", color: "#aaa", marginTop: 4 }}>
+              <span>₹1,999</span><span>₹20,000</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Main */}
+        <div className="main">
+          <div className="toolbar">
+            <input className="search-box" placeholder="🔍  Search products..." value={search} onChange={e => setSearch(e.target.value)} />
+            <select className="sort-select" value={sort} onChange={e => setSort(e.target.value)}>
+              {sortOptions.map(s => <option key={s}>{s}</option>)}
+            </select>
+            <span style={{ fontSize: "0.8rem", color: "#aaa" }}>{filtered.length} items</span>
+          </div>
+
+          {filtered.length === 0 ? (
+            <div className="empty">
+              <div className="empty-icon">🔍</div>
+              <p>No products found.</p>
+            </div>
+          ) : (
+            <div className="grid">
+              {filtered.map(p => (
+                <div className="card" key={p.id}>
+                  <div className="card-img" style={{ background: p.color + "22" }}>
+                    <span>{p.image}</span>
+                    {p.tag && <span className="tag-badge" style={{ background: tagColors[p.tag] }}>{p.tag}</span>}
+                  </div>
+                  <div className="card-body">
+                    <div className="card-cat">{p.category}</div>
+                    <div className="card-name">{p.name}</div>
+                    <Stars rating={p.rating} />
+                    <div className="card-footer">
+                      <span className="price">₹{p.price.toLocaleString("en-IN")}</span>
+                      <button
+                        className={`add-btn ${cart.includes(p.id) ? "in-cart" : "out-cart"}`}
+                        onClick={() => addToCart(p.id)}
+                      >
+                        {cart.includes(p.id) ? "✓ Added" : "+ Cart"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
