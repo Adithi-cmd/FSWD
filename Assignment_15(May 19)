@@ -1,0 +1,237 @@
+import { useState } from "react";
+
+let idCounter = 10;
+const newId = () => ++idCounter;
+
+const initialTree = [
+  {
+    id: 1, name: "src", type: "folder", open: true, children: [
+      { id: 2, name: "components", type: "folder", open: false, children: [
+        { id: 3, name: "App.jsx", type: "file", children: [] },
+      ]},
+      { id: 4, name: "index.js", type: "file", children: [] },
+    ],
+  },
+  { id: 5, name: "public", type: "folder", open: false, children: [
+    { id: 6, name: "index.html", type: "file", children: [] },
+  ]},
+  { id: 7, name: "package.json", type: "file", children: [] },
+];
+
+function getFileIcon(name) {
+  const ext = name.split(".").pop();
+  const icons = { jsx: "⚛️", js: "📜", html: "🌐", css: "🎨", json: "📋", ts: "📘", tsx: "💠", md: "📝" };
+  return icons[ext] || "📄";
+}
+
+function TreeNode({ node, onToggle, onAdd, onDelete, onRename, depth = 0 }) {
+  const [adding, setAdding] = useState(null);
+  const [inputVal, setInputVal] = useState("");
+  const [renaming, setRenaming] = useState(false);
+  const [renameVal, setRenameVal] = useState(node.name);
+
+  const handleAdd = (type) => { setAdding(type); setInputVal(""); };
+
+  const confirmAdd = () => {
+    if (inputVal.trim()) onAdd(node.id, inputVal.trim(), adding);
+    setAdding(null); setInputVal("");
+  };
+
+  const confirmRename = () => {
+    if (renameVal.trim()) onRename(node.id, renameVal.trim());
+    setRenaming(false);
+  };
+
+  return (
+    <div style={{ paddingLeft: depth === 0 ? 0 : "20px" }}>
+      <div className="node-row" style={{ paddingLeft: `${depth * 8}px` }}>
+        {node.type === "folder" ? (
+          <span className="toggle" onClick={() => onToggle(node.id)}>
+            {node.open ? "▾" : "▸"}
+          </span>
+        ) : <span style={{ width: 16, display: "inline-block" }} />}
+
+        <span className="node-icon">
+          {node.type === "folder" ? (node.open ? "📂" : "📁") : getFileIcon(node.name)}
+        </span>
+
+        {renaming ? (
+          <input
+            autoFocus
+            className="rename-input"
+            value={renameVal}
+            onChange={e => setRenameVal(e.target.value)}
+            onBlur={confirmRename}
+            onKeyDown={e => { if (e.key === "Enter") confirmRename(); if (e.key === "Escape") setRenaming(false); }}
+          />
+        ) : (
+          <span className="node-name" onDoubleClick={() => { setRenaming(true); setRenameVal(node.name); }}>
+            {node.name}
+          </span>
+        )}
+
+        <span className="node-actions">
+          {node.type === "folder" && <>
+            <button title="New File" onClick={() => handleAdd("file")}>+f</button>
+            <button title="New Folder" onClick={() => handleAdd("folder")}>+d</button>
+          </>}
+          <button title="Rename" onClick={() => { setRenaming(true); setRenameVal(node.name); }}>✎</button>
+          <button title="Delete" className="del" onClick={() => onDelete(node.id)}>✕</button>
+        </span>
+      </div>
+
+      {adding && (
+        <div style={{ paddingLeft: `${(depth + 1) * 20 + 16}px`, marginTop: 4 }}>
+          <input
+            autoFocus
+            className="add-input"
+            placeholder={adding === "file" ? "filename.js" : "folder name"}
+            value={inputVal}
+            onChange={e => setInputVal(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") confirmAdd(); if (e.key === "Escape") setAdding(null); }}
+          />
+          <button className="confirm-btn" onClick={confirmAdd}>Add</button>
+          <button className="cancel-btn" onClick={() => setAdding(null)}>✕</button>
+        </div>
+      )}
+
+      {node.type === "folder" && node.open && node.children.map(child => (
+        <TreeNode
+          key={child.id}
+          node={child}
+          depth={depth + 1}
+          onToggle={onToggle}
+          onAdd={onAdd}
+          onDelete={onDelete}
+          onRename={onRename}
+        />
+      ))}
+    </div>
+  );
+}
+
+function toggleNode(tree, id) {
+  return tree.map(n => n.id === id
+    ? { ...n, open: !n.open }
+    : { ...n, children: toggleNode(n.children, id) }
+  );
+}
+
+function addNode(tree, parentId, name, type) {
+  return tree.map(n => n.id === parentId
+    ? { ...n, open: true, children: [...n.children, { id: newId(), name, type, open: false, children: [] }] }
+    : { ...n, children: addNode(n.children, parentId, name, type) }
+  );
+}
+
+function deleteNode(tree, id) {
+  return tree.filter(n => n.id !== id).map(n => ({ ...n, children: deleteNode(n.children, id) }));
+}
+
+function renameNode(tree, id, name) {
+  return tree.map(n => n.id === id ? { ...n, name } : { ...n, children: renameNode(n.children, id, name) });
+}
+
+export default function FolderArchitect() {
+  const [tree, setTree] = useState(initialTree);
+  const [rootInput, setRootInput] = useState("");
+  const [rootAdding, setRootAdding] = useState(null);
+
+  const handleToggle = (id) => setTree(t => toggleNode(t, id));
+  const handleAdd = (parentId, name, type) => setTree(t => addNode(t, parentId, name, type));
+  const handleDelete = (id) => setTree(t => deleteNode(t, id));
+  const handleRename = (id, name) => setTree(t => renameNode(t, id, name));
+
+  const confirmRootAdd = () => {
+    if (rootInput.trim()) {
+      setTree(t => [...t, { id: newId(), name: rootInput.trim(), type: rootAdding, open: false, children: [] }]);
+    }
+    setRootAdding(null); setRootInput("");
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#0f1117", display: "flex", justifyContent: "center", alignItems: "flex-start", padding: "3rem 1rem" }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #0f1117; }
+        .card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; width: 100%; max-width: 560px; overflow: hidden; font-family: 'JetBrains Mono', monospace; }
+        .card-header { background: #21262d; padding: 16px 20px; border-bottom: 1px solid #30363d; display: flex; align-items: center; justify-content: space-between; }
+        .card-title { color: #e6edf3; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.5px; }
+        .dots { display: flex; gap: 6px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .card-body { padding: 16px 20px; }
+        .node-row { display: flex; align-items: center; gap: 6px; padding: 4px 6px; border-radius: 6px; transition: background 0.15s; cursor: default; }
+        .node-row:hover { background: #21262d; }
+        .node-row:hover .node-actions { opacity: 1; }
+        .toggle { color: #8b949e; cursor: pointer; font-size: 0.75rem; width: 16px; text-align: center; user-select: none; }
+        .node-icon { font-size: 1rem; }
+        .node-name { color: #e6edf3; font-size: 0.82rem; flex: 1; }
+        .node-actions { opacity: 0; display: flex; gap: 4px; transition: opacity 0.15s; }
+        .node-actions button { background: #30363d; border: none; color: #8b949e; border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; cursor: pointer; font-family: 'JetBrains Mono', monospace; transition: all 0.15s; }
+        .node-actions button:hover { background: #388bfd22; color: #58a6ff; }
+        .node-actions button.del:hover { background: #f8514922; color: #f85149; }
+        .add-input, .rename-input { background: #0d1117; border: 1px solid #388bfd; border-radius: 4px; color: #e6edf3; padding: 4px 8px; font-size: 0.8rem; font-family: 'JetBrains Mono', monospace; outline: none; width: 160px; }
+        .confirm-btn { background: #238636; border: none; color: white; border-radius: 4px; padding: 4px 10px; font-size: 0.75rem; cursor: pointer; margin-left: 6px; font-family: 'JetBrains Mono', monospace; }
+        .cancel-btn { background: transparent; border: none; color: #8b949e; font-size: 0.75rem; cursor: pointer; margin-left: 4px; }
+        .root-bar { display: flex; gap: 8px; padding: 12px 20px; border-top: 1px solid #30363d; background: #161b22; }
+        .root-bar button { background: #21262d; border: 1px solid #30363d; color: #8b949e; border-radius: 6px; padding: 6px 14px; font-size: 0.75rem; cursor: pointer; font-family: 'JetBrains Mono', monospace; transition: all 0.15s; }
+        .root-bar button:hover { border-color: #388bfd; color: #58a6ff; }
+        .root-add-row { display: flex; align-items: center; gap: 8px; padding: 8px 20px; border-top: 1px solid #30363d; }
+        .hint { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: #484f58; padding: 0 20px 12px; }
+      `}</style>
+
+      <div className="card">
+        <div className="card-header">
+          <div className="dots">
+            <div className="dot" style={{ background: "#f85149" }} />
+            <div className="dot" style={{ background: "#e3b341" }} />
+            <div className="dot" style={{ background: "#3fb950" }} />
+          </div>
+          <span className="card-title">📁 Folder Architect</span>
+          <span style={{ fontSize: "0.7rem", color: "#484f58" }}>double-click to rename</span>
+        </div>
+
+        <div className="card-body">
+          {tree.map(node => (
+            <TreeNode
+              key={node.id}
+              node={node}
+              onToggle={handleToggle}
+              onAdd={handleAdd}
+              onDelete={handleDelete}
+              onRename={handleRename}
+            />
+          ))}
+          {tree.length === 0 && (
+            <p style={{ color: "#484f58", fontSize: "0.8rem", textAlign: "center", padding: "2rem" }}>
+              No files yet. Add a root folder or file below.
+            </p>
+          )}
+        </div>
+
+        {rootAdding && (
+          <div className="root-add-row">
+            <input
+              autoFocus
+              className="add-input"
+              placeholder={rootAdding === "file" ? "filename.js" : "folder name"}
+              value={rootInput}
+              onChange={e => setRootInput(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") confirmRootAdd(); if (e.key === "Escape") setRootAdding(null); }}
+            />
+            <button className="confirm-btn" onClick={confirmRootAdd}>Add</button>
+            <button className="cancel-btn" onClick={() => setRootAdding(null)}>✕</button>
+          </div>
+        )}
+
+        <div className="root-bar">
+          <button onClick={() => { setRootAdding("folder"); setRootInput(""); }}>+ New Folder</button>
+          <button onClick={() => { setRootAdding("file"); setRootInput(""); }}>+ New File</button>
+        </div>
+
+        <p className="hint">+f = new file &nbsp;|&nbsp; +d = new folder &nbsp;|&nbsp; ✎ = rename &nbsp;|&nbsp; ✕ = delete</p>
+      </div>
+    </div>
+  );
+}
