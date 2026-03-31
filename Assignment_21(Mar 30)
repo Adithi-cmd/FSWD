@@ -1,4 +1,4 @@
-//App.js
+//Index.js
 const mongoose = require("mongoose");
 
 // ── USER SCHEMA ───────────────────────────────────────
