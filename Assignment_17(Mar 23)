@@ -1,0 +1,29 @@
+const http = require("http");
+
+const routes = {
+  "/": "👋 Welcome to Hello Server!",
+  "/hello": "😊 Hello, World!",
+  "/about": "📖 This is a simple Node.js server with multiple routes.",
+  "/contact": "📬 Reach us at hello@server.com",
+  "/status": "✅ Server is up and running smoothly.",
+  "/bye": "👋 Goodbye! See you next time.",
+};
+
+const server = http.createServer((req, res) => {
+  res.setHeader("Content-Type", "text/plain");
+
+  if (routes[req.url]) {
+    res.writeHead(200);
+    res.end(routes[req.url]);
+  } else {
+    res.writeHead(404);
+    res.end("❌ 404 - Route not found.");
+  }
+});
+
+const PORT = 3000;
+server.listen(PORT, () => {
+  console.log(`✅ Server running at http://localhost:${PORT}`);
+  console.log("Available routes:");
+  Object.keys(routes).forEach((r) => console.log(`  → http://localhost:${PORT}${r}`));
+});
