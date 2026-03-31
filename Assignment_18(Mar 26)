@@ -1,0 +1,133 @@
+const express = require("express");
+const app = express();
+app.use(express.json());
+
+// ── DATA ──────────────────────────────────────────────
+let books = [
+  { id: 1, title: "The Alchemist", authorId: 1, genre: "Fiction", price: 299 },
+  { id: 2, title: "Atomic Habits", authorId: 2, genre: "Self-Help", price: 399 },
+  { id: 3, title: "Sapiens", authorId: 3, genre: "History", price: 499 },
+  { id: 4, title: "Ikigai", authorId: 4, genre: "Self-Help", price: 349 },
+  { id: 5, title: "The Monk Who Sold His Ferrari", authorId: 5, genre: "Fiction", price: 279 },
+];
+
+let authors = [
+  { id: 1, name: "Paulo Coelho", country: "Brazil" },
+  { id: 2, name: "James Clear", country: "USA" },
+  { id: 3, name: "Yuval Noah Harari", country: "Israel" },
+  { id: 4, name: "Francesc Miralles", country: "Spain" },
+  { id: 5, name: "Robin Sharma", country: "Canada" },
+];
+
+let nextBookId = 6;
+let nextAuthorId = 6;
+
+// ── BOOK ROUTES ───────────────────────────────────────
+
+// GET all books
+app.get("/books", (req, res) => {
+  res.json({ success: true, count: books.length, data: books });
+});
+
+// GET single book
+app.get("/books/:id", (req, res) => {
+  const book = books.find((b) => b.id === +req.params.id);
+  if (!book) return res.status(404).json({ success: false, message: "Book not found" });
+  res.json({ success: true, data: book });
+});
+
+// POST create book
+app.post("/books", (req, res) => {
+  const { title, authorId, genre, price } = req.body;
+  if (!title || !authorId || !genre || !price)
+    return res.status(400).json({ success: false, message: "All fields required: title, authorId, genre, price" });
+  const book = { id: nextBookId++, title, authorId, genre, price };
+  books.push(book);
+  res.status(201).json({ success: true, message: "Book created", data: book });
+});
+
+// PUT update book
+app.put("/books/:id", (req, res) => {
+  const idx = books.findIndex((b) => b.id === +req.params.id);
+  if (idx === -1) return res.status(404).json({ success: false, message: "Book not found" });
+  books[idx] = { ...books[idx], ...req.body };
+  res.json({ success: true, message: "Book updated", data: books[idx] });
+});
+
+// DELETE book
+app.delete("/books/:id", (req, res) => {
+  const idx = books.findIndex((b) => b.id === +req.params.id);
+  if (idx === -1) return res.status(404).json({ success: false, message: "Book not found" });
+  const deleted = books.splice(idx, 1)[0];
+  res.json({ success: true, message: "Book deleted", data: deleted });
+});
+
+// ── AUTHOR ROUTES ─────────────────────────────────────
+
+// GET all authors
+app.get("/authors", (req, res) => {
+  res.json({ success: true, count: authors.length, data: authors });
+});
+
+// GET single author
+app.get("/authors/:id", (req, res) => {
+  const author = authors.find((a) => a.id === +req.params.id);
+  if (!author) return res.status(404).json({ success: false, message: "Author not found" });
+  res.json({ success: true, data: author });
+});
+
+// GET all books by an author
+app.get("/authors/:id/books", (req, res) => {
+  const author = authors.find((a) => a.id === +req.params.id);
+  if (!author) return res.status(404).json({ success: false, message: "Author not found" });
+  const authorBooks = books.filter((b) => b.authorId === +req.params.id);
+  res.json({ success: true, author: author.name, count: authorBooks.length, data: authorBooks });
+});
+
+// POST create author
+app.post("/authors", (req, res) => {
+  const { name, country } = req.body;
+  if (!name || !country)
+    return res.status(400).json({ success: false, message: "All fields required: name, country" });
+  const author = { id: nextAuthorId++, name, country };
+  authors.push(author);
+  res.status(201).json({ success: true, message: "Author created", data: author });
+});
+
+// PUT update author
+app.put("/authors/:id", (req, res) => {
+  const idx = authors.findIndex((a) => a.id === +req.params.id);
+  if (idx === -1) return res.status(404).json({ success: false, message: "Author not found" });
+  authors[idx] = { ...authors[idx], ...req.body };
+  res.json({ success: true, message: "Author updated", data: authors[idx] });
+});
+
+// DELETE author
+app.delete("/authors/:id", (req, res) => {
+  const idx = authors.findIndex((a) => a.id === +req.params.id);
+  if (idx === -1) return res.status(404).json({ success: false, message: "Author not found" });
+  const deleted = authors.splice(idx, 1)[0];
+  res.json({ success: true, message: "Author deleted", data: deleted });
+});
+
+// ── ROOT ──────────────────────────────────────────────
+app.get("/", (req, res) => {
+  res.json({
+    message: "📚 Bookstore API",
+    routes: {
+      books: ["GET /books", "GET /books/:id", "POST /books", "PUT /books/:id", "DELETE /books/:id"],
+      authors: ["GET /authors", "GET /authors/:id", "GET /authors/:id/books", "POST /authors", "PUT /authors/:id", "DELETE /authors/:id"],
+    },
+  });
+});
+
+// 404 fallback
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: "Route not found" });
+});
+
+// ── START ─────────────────────────────────────────────
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`📚 Bookstore API running at http://localhost:${PORT}`);
+});
