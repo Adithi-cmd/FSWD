@@ -1,3 +1,4 @@
+App.ja
 const express    = require("express");
 const taskRoutes = require("./routes/taskRoutes");
 
@@ -38,3 +39,171 @@ const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`✅ MVC Task API running at http://localhost:${PORT}`);
 });
+
+
+Taskroutes.js
+const express = require("express");
+const router  = express.Router();
+const TaskController = require("../controllers/taskController");
+
+router.get("/",                    TaskController.getAllTasks);
+router.get("/:id",                 TaskController.getTaskById);
+router.post("/",                   TaskController.createTask);
+router.put("/:id",                 TaskController.updateTask);
+router.patch("/:id/status",        TaskController.updateStatus);
+router.delete("/completed/clear",  TaskController.clearCompleted);
+router.delete("/:id",              TaskController.deleteTask);
+
+module.exports = router;
+
+
+Taskcontroller.js
+const TaskModel = require("../models/taskModel");
+
+const VALID_STATUSES   = ["pending", "in-progress", "completed"];
+const VALID_PRIORITIES = ["low", "medium", "high"];
+
+const TaskController = {
+
+  // GET /tasks
+  getAllTasks: (req, res) => {
+    const tasks = TaskModel.getAll(req.query);
+    res.json({ success: true, count: tasks.length, data: tasks });
+  },
+
+  // GET /tasks/:id
+  getTaskById: (req, res) => {
+    const task = TaskModel.getById(+req.params.id);
+    if (!task) return res.status(404).json({ success: false, message: "Task not found" });
+    res.json({ success: true, data: task });
+  },
+
+  // POST /tasks
+  createTask: (req, res) => {
+    const { title, description, priority } = req.body;
+    if (!title) return res.status(400).json({ success: false, message: "title is required" });
+    if (priority && !VALID_PRIORITIES.includes(priority))
+      return res.status(400).json({ success: false, message: "priority must be low | medium | high" });
+
+    const task = TaskModel.create({ title, description, priority });
+    res.status(201).json({ success: true, message: "Task created", data: task });
+  },
+
+  // PUT /tasks/:id
+  updateTask: (req, res) => {
+    if (req.body.status && !VALID_STATUSES.includes(req.body.status))
+      return res.status(400).json({ success: false, message: "status must be pending | in-progress | completed" });
+    if (req.body.priority && !VALID_PRIORITIES.includes(req.body.priority))
+      return res.status(400).json({ success: false, message: "priority must be low | medium | high" });
+
+    const task = TaskModel.update(+req.params.id, req.body);
+    if (!task) return res.status(404).json({ success: false, message: "Task not found" });
+    res.json({ success: true, message: "Task updated", data: task });
+  },
+
+  // PATCH /tasks/:id/status
+  updateStatus: (req, res) => {
+    const { status } = req.body;
+    if (!status || !VALID_STATUSES.includes(status))
+      return res.status(400).json({ success: false, message: "status must be pending | in-progress | completed" });
+
+    const task = TaskModel.updateStatus(+req.params.id, status);
+    if (!task) return res.status(404).json({ success: false, message: "Task not found" });
+    res.json({ success: true, message: "Status updated", data: task });
+  },
+
+  // DELETE /tasks/:id
+  deleteTask: (req, res) => {
+    const task = TaskModel.delete(+req.params.id);
+    if (!task) return res.status(404).json({ success: false, message: "Task not found" });
+    res.json({ success: true, message: "Task deleted", data: task });
+  },
+
+  // DELETE /tasks/completed/clear
+  clearCompleted: (req, res) => {
+    const count = TaskModel.clearCompleted();
+    res.json({ success: true, message: `Cleared ${count} completed task(s)` });
+  },
+};
+
+module.exports = TaskController;
+
+
+
+Taskmodel.js
+let tasks = [
+  { id: 1, title: "Buy groceries", description: "Milk, eggs, bread", status: "pending", priority: "medium", createdAt: new Date().toISOString() },
+  { id: 2, title: "Complete assignment", description: "Finish Task API project", status: "in-progress", priority: "high", createdAt: new Date().toISOString() },
+  { id: 3, title: "Morning walk", description: "30 minutes walk", status: "completed", priority: "low", createdAt: new Date().toISOString() },
+];
+
+let nextId = 4;
+
+const TaskModel = {
+  getAll: (filters = {}) => {
+    let result = [...tasks];
+    if (filters.status)   result = result.filter(t => t.status === filters.status);
+    if (filters.priority) result = result.filter(t => t.priority === filters.priority);
+    return result;
+  },
+
+  getById: (id) => tasks.find(t => t.id === id) || null,
+
+  create: ({ title, description, priority }) => {
+    const task = {
+      id: nextId++,
+      title,
+      description: description || "",
+      status: "pending",
+      priority: priority || "medium",
+      createdAt: new Date().toISOString(),
+    };
+    tasks.push(task);
+    return task;
+  },
+
+  update: (id, data) => {
+    const idx = tasks.findIndex(t => t.id === id);
+    if (idx === -1) return null;
+    tasks[idx] = { ...tasks[idx], ...data, id: tasks[idx].id, createdAt: tasks[idx].createdAt };
+    return tasks[idx];
+  },
+
+  updateStatus: (id, status) => {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return null;
+    task.status = status;
+    return task;
+  },
+
+  delete: (id) => {
+    const idx = tasks.findIndex(t => t.id === id);
+    if (idx === -1) return null;
+    return tasks.splice(idx, 1)[0];
+  },
+
+  clearCompleted: () => {
+    const before = tasks.length;
+    tasks = tasks.filter(t => t.status !== "completed");
+    return before - tasks.length;
+  },
+};
+
+module.exports = TaskModel;
+
+
+Package.json
+{
+  "name": "mvc-task-api",
+  "version": "1.0.0",
+  "description": "Task Manager API with MVC structure",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
+
+
