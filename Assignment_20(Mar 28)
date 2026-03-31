@@ -1,0 +1,40 @@
+const express    = require("express");
+const taskRoutes = require("./routes/taskRoutes");
+
+const app = express();
+app.use(express.json());
+
+// ── ROUTES ────────────────────────────────────────────
+app.use("/tasks", taskRoutes);
+
+app.get("/", (req, res) => {
+  res.json({
+    message: "✅ Task Manager API — MVC Structure",
+    structure: {
+      models:      "models/taskModel.js",
+      controllers: "controllers/taskController.js",
+      routes:      "routes/taskRoutes.js",
+      entry:       "app.js",
+    },
+    endpoints: [
+      "GET    /tasks",
+      "GET    /tasks/:id",
+      "POST   /tasks",
+      "PUT    /tasks/:id",
+      "PATCH  /tasks/:id/status",
+      "DELETE /tasks/:id",
+      "DELETE /tasks/completed/clear",
+    ],
+  });
+});
+
+// 404 fallback
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: "Route not found" });
+});
+
+// ── START ─────────────────────────────────────────────
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`✅ MVC Task API running at http://localhost:${PORT}`);
+});
