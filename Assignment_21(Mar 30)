@@ -1,3 +1,4 @@
+//App.js
 const mongoose = require("mongoose");
 
 // ── USER SCHEMA ───────────────────────────────────────
@@ -60,3 +61,87 @@ const Comment  = mongoose.model("Comment",  commentSchema);
 const Post     = mongoose.model("Post",     postSchema);
 
 module.exports = { User, Category, Comment, Post };
+
+
+Db.js
+const mongoose = require("mongoose");
+
+const connect = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI || "mongodb://localhost:27017/blogDB");
+    console.log("✅ MongoDB connected");
+  } catch (err) {
+    console.error("❌ MongoDB connection error:", err.message);
+    process.exit(1);
+  }
+};
+
+module.exports = connect;
+
+
+Seed.ja
+const connect              = require("./config/db");
+const { User, Category, Comment, Post } = require("./models");
+
+const seed = async () => {
+  await connect();
+
+  // clear existing
+  await Promise.all([User.deleteMany(), Category.deleteMany(), Comment.deleteMany(), Post.deleteMany()]);
+
+  // users
+  const [alice, bob] = await User.insertMany([
+    { name: "Alice", email: "alice@blog.com", password: "hashed_pw_1", role: "author", bio: "Tech writer" },
+    { name: "Bob",   email: "bob@blog.com",   password: "hashed_pw_2", role: "user" },
+  ]);
+
+  // categories
+  const [tech, lifestyle] = await Category.insertMany([
+    { name: "Technology", slug: "technology" },
+    { name: "Lifestyle",  slug: "lifestyle"  },
+  ]);
+
+  // post
+  const post = await Post.create({
+    title:      "Getting Started with MongoDB",
+    slug:       "getting-started-with-mongodb",
+    content:    "MongoDB is a NoSQL database...",
+    excerpt:    "A beginner guide to MongoDB.",
+    author:     alice._id,
+    category:   tech._id,
+    tags:       ["mongodb", "database", "nodejs"],
+    status:     "published",
+    publishedAt: new Date(),
+  });
+
+  // comment
+  const comment = await Comment.create({
+    post:    post._id,
+    author:  bob._id,
+    content: "Great article, very helpful!",
+  });
+
+  // link comment back to post
+  await Post.findByIdAndUpdate(post._id, { $push: { comments: comment._id } });
+
+  console.log("🌱 Seed complete");
+  process.exit(0);
+};
+
+seed();
+
+
+Package.json
+{
+  "name": "blog-schema",
+  "version": "1.0.0",
+  "description": "MongoDB schema for a blogging platform",
+  "main": "seed.js",
+  "scripts": {
+    "seed": "node seed.js"
+  },
+  "dependencies": {
+    "mongoose": "^8.0.0"
+  }
+}
+
