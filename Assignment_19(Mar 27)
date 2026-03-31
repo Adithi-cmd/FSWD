@@ -1,0 +1,123 @@
+const express = require("express");
+const app = express();
+app.use(express.json());
+
+// ── DATA ──────────────────────────────────────────────
+let tasks = [
+  { id: 1, title: "Buy groceries", description: "Milk, eggs, bread", status: "pending", priority: "medium", createdAt: new Date().toISOString() },
+  { id: 2, title: "Complete assignment", description: "Finish Task API project", status: "in-progress", priority: "high", createdAt: new Date().toISOString() },
+  { id: 3, title: "Morning walk", description: "30 minutes walk", status: "completed", priority: "low", createdAt: new Date().toISOString() },
+];
+
+let nextId = 4;
+
+// ── ROUTES ────────────────────────────────────────────
+
+// GET all tasks  (optional ?status=pending&priority=high filter)
+app.get("/tasks", (req, res) => {
+  let result = [...tasks];
+  if (req.query.status)   result = result.filter(t => t.status === req.query.status);
+  if (req.query.priority) result = result.filter(t => t.priority === req.query.priority);
+  res.json({ success: true, count: result.length, data: result });
+});
+
+// GET single task
+app.get("/tasks/:id", (req, res) => {
+  const task = tasks.find(t => t.id === +req.params.id);
+  if (!task) return res.status(404).json({ success: false, message: "Task not found" });
+  res.json({ success: true, data: task });
+});
+
+// POST create task
+app.post("/tasks", (req, res) => {
+  const { title, description, priority } = req.body;
+  if (!title) return res.status(400).json({ success: false, message: "title is required" });
+
+  const validPriorities = ["low", "medium", "high"];
+  if (priority && !validPriorities.includes(priority))
+    return res.status(400).json({ success: false, message: "priority must be low | medium | high" });
+
+  const task = {
+    id: nextId++,
+    title,
+    description: description || "",
+    status: "pending",
+    priority: priority || "medium",
+    createdAt: new Date().toISOString(),
+  };
+  tasks.push(task);
+  res.status(201).json({ success: true, message: "Task created", data: task });
+});
+
+// PUT update task (full update)
+app.put("/tasks/:id", (req, res) => {
+  const idx = tasks.findIndex(t => t.id === +req.params.id);
+  if (idx === -1) return res.status(404).json({ success: false, message: "Task not found" });
+
+  const validStatuses   = ["pending", "in-progress", "completed"];
+  const validPriorities = ["low", "medium", "high"];
+
+  if (req.body.status && !validStatuses.includes(req.body.status))
+    return res.status(400).json({ success: false, message: "status must be pending | in-progress | completed" });
+  if (req.body.priority && !validPriorities.includes(req.body.priority))
+    return res.status(400).json({ success: false, message: "priority must be low | medium | high" });
+
+  tasks[idx] = { ...tasks[idx], ...req.body, id: tasks[idx].id, createdAt: tasks[idx].createdAt };
+  res.json({ success: true, message: "Task updated", data: tasks[idx] });
+});
+
+// PATCH update status only
+app.patch("/tasks/:id/status", (req, res) => {
+  const task = tasks.find(t => t.id === +req.params.id);
+  if (!task) return res.status(404).json({ success: false, message: "Task not found" });
+
+  const validStatuses = ["pending", "in-progress", "completed"];
+  const { status } = req.body;
+  if (!status || !validStatuses.includes(status))
+    return res.status(400).json({ success: false, message: "status must be pending | in-progress | completed" });
+
+  task.status = status;
+  res.json({ success: true, message: "Status updated", data: task });
+});
+
+// DELETE single task
+app.delete("/tasks/:id", (req, res) => {
+  const idx = tasks.findIndex(t => t.id === +req.params.id);
+  if (idx === -1) return res.status(404).json({ success: false, message: "Task not found" });
+  const deleted = tasks.splice(idx, 1)[0];
+  res.json({ success: true, message: "Task deleted", data: deleted });
+});
+
+// DELETE all completed tasks
+app.delete("/tasks/completed/clear", (req, res) => {
+  const before = tasks.length;
+  tasks = tasks.filter(t => t.status !== "completed");
+  res.json({ success: true, message: `Cleared ${before - tasks.length} completed task(s)` });
+});
+
+// ── ROOT ──────────────────────────────────────────────
+app.get("/", (req, res) => {
+  res.json({
+    message: "✅ Task Manager API",
+    endpoints: [
+      "GET    /tasks                   → all tasks (filter: ?status= &priority=)",
+      "GET    /tasks/:id               → single task",
+      "POST   /tasks                   → create task  { title, description, priority }",
+      "PUT    /tasks/:id               → full update  { title, description, status, priority }",
+      "PATCH  /tasks/:id/status        → update status only  { status }",
+      "DELETE /tasks/:id               → delete task",
+      "DELETE /tasks/completed/clear   → delete all completed tasks",
+    ],
+  });
+});
+
+// 404 fallback
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: "Route not found" });
+});
+
+// ── START ─────────────────────────────────────────────
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`✅ Task API running at http://localhost:${PORT}`);
+});
