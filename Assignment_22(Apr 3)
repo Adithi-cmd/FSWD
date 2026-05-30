@@ -1,0 +1,296 @@
+# CRUD Lab — All Code
+
+---
+
+## 1. backend/package.json
+```json
+{
+  "name": "crud-lab-backend",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": { "start": "node server.js", "dev": "nodemon server.js" },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
+    "express": "^4.18.2",
+    "mongoose": "^7.0.0"
+  }
+}
+```
+
+---
+
+## 2. backend/.env
+```
+MONGO_URI=mongodb://localhost:27017/crudlab
+```
+
+---
+
+## 3. backend/server.js
+```js
+require('dotenv').config();
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const productRoutes = require('./routes/productRoutes');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/crudlab')
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.log(err));
+
+app.use('/api/products', productRoutes);
+app.listen(5000, () => console.log('Server running on port 5000'));
+```
+
+---
+
+## 4. backend/models/Product.js
+```js
+const mongoose = require('mongoose');
+
+const productSchema = new mongoose.Schema({
+  name:     { type: String, required: true },
+  price:    { type: Number, required: true },
+  category: { type: String, default: 'General' },
+}, { timestamps: true });
+
+module.exports = mongoose.model('Product', productSchema);
+```
+
+---
+
+## 5. backend/routes/productRoutes.js
+```js
+const router = require('express').Router();
+const Product = require('../models/Product');
+
+// CREATE
+router.post('/', async (req, res) => {
+  try {
+    const product = await Product.create(req.body);
+    res.status(201).json(product);
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+// READ ALL
+router.get('/', async (req, res) => {
+  try {
+    const products = await Product.find();
+    res.json(products);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// READ ONE
+router.get('/:id', async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ error: 'Not found' });
+    res.json(product);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// UPDATE
+router.put('/:id', async (req, res) => {
+  try {
+    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    if (!product) return res.status(404).json({ error: 'Not found' });
+    res.json(product);
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+// DELETE
+router.delete('/:id', async (req, res) => {
+  try {
+    const product = await Product.findByIdAndDelete(req.params.id);
+    if (!product) return res.status(404).json({ error: 'Not found' });
+    res.json({ message: 'Deleted successfully' });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+module.exports = router;
+```
+
+---
+
+## 6. frontend/package.json
+```json
+{
+  "name": "crud-lab-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "axios": "^1.4.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build"
+  },
+  "proxy": "http://localhost:5000"
+}
+```
+
+---
+
+## 7. frontend/public/index.html
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CRUD Lab</title>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+```
+
+---
+
+## 8. frontend/src/index.js
+```js
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+```
+
+---
+
+## 9. frontend/src/api.js
+```js
+import axios from 'axios';
+
+const API = axios.create({ baseURL: '/api/products' });
+
+export const getProducts   = ()         => API.get('/');
+export const getProduct    = (id)       => API.get(`/${id}`);
+export const createProduct = (data)     => API.post('/', data);
+export const updateProduct = (id, data) => API.put(`/${id}`, data);
+export const deleteProduct = (id)       => API.delete(`/${id}`);
+```
+
+---
+
+## 10. frontend/src/App.js
+```js
+import React, { useState, useEffect } from 'react';
+import ProductForm from './components/ProductForm';
+import ProductList from './components/ProductList';
+import { getProducts, createProduct, updateProduct, deleteProduct } from './api';
+
+export default function App() {
+  const [products, setProducts] = useState([]);
+  const [editing, setEditing]   = useState(null);
+
+  const fetchAll = async () => {
+    const { data } = await getProducts();
+    setProducts(data);
+  };
+
+  useEffect(() => { fetchAll(); }, []);
+
+  const handleSubmit = async (form) => {
+    if (editing) {
+      await updateProduct(editing._id, form);
+      setEditing(null);
+    } else {
+      await createProduct(form);
+    }
+    fetchAll();
+  };
+
+  const handleDelete = async (id) => {
+    await deleteProduct(id);
+    fetchAll();
+  };
+
+  return (
+    <div style={{ maxWidth: 800, margin: '40px auto', fontFamily: 'sans-serif', padding: '0 16px' }}>
+      <h2>CRUD Lab — Products</h2>
+      <ProductForm onSubmit={handleSubmit} editing={editing} onCancel={() => setEditing(null)} />
+      <ProductList products={products} onEdit={setEditing} onDelete={handleDelete} />
+    </div>
+  );
+}
+```
+
+---
+
+## 11. frontend/src/components/ProductForm.js
+```js
+import React, { useState, useEffect } from 'react';
+
+const empty = { name: '', price: '', category: '' };
+
+export default function ProductForm({ onSubmit, editing, onCancel }) {
+  const [form, setForm] = useState(empty);
+
+  useEffect(() => {
+    setForm(editing ? { name: editing.name, price: editing.price, category: editing.category } : empty);
+  }, [editing]);
+
+  const handle = e => setForm({ ...form, [e.target.name]: e.target.value });
+
+  const submit = e => {
+    e.preventDefault();
+    onSubmit(form);
+    setForm(empty);
+  };
+
+  return (
+    <form onSubmit={submit} style={{ marginBottom: 24 }}>
+      <h3>{editing ? 'Edit Product' : 'Add Product'}</h3>
+      <input name="name"     placeholder="Name"     value={form.name}     onChange={handle} required />
+      <input name="price"    placeholder="Price"    value={form.price}    onChange={handle} required type="number" />
+      <input name="category" placeholder="Category" value={form.category} onChange={handle} />
+      <button type="submit">{editing ? 'Update' : 'Add'}</button>
+      {editing && <button type="button" onClick={onCancel} style={{ marginLeft: 8 }}>Cancel</button>}
+    </form>
+  );
+}
+```
+
+---
+
+## 12. frontend/src/components/ProductList.js
+```js
+import React from 'react';
+
+export default function ProductList({ products, onEdit, onDelete }) {
+  if (!products.length) return <p>No products yet.</p>;
+
+  return (
+    <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <thead>
+        <tr>
+          <th>Name</th><th>Price</th><th>Category</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {products.map(p => (
+          <tr key={p._id}>
+            <td>{p.name}</td>
+            <td>₹{p.price}</td>
+            <td>{p.category}</td>
+            <td>
+              <button onClick={() => onEdit(p)}>Edit</button>
+              <button onClick={() => onDelete(p._id)} style={{ marginLeft: 8 }}>Delete</button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+```
