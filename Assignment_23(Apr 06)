@@ -1,0 +1,404 @@
+# JWT Auth System — All Code
+
+---
+
+## 1. backend/.env
+```
+MONGO_URI=mongodb://localhost:27017/authdb
+JWT_SECRET=your_super_secret_key_here
+PORT=5000
+```
+
+---
+
+## 2. backend/package.json
+```json
+{
+  "name": "auth-backend",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": { "start": "node server.js", "dev": "nodemon server.js" },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
+    "mongoose": "^7.0.0"
+  }
+}
+```
+
+---
+
+## 3. backend/server.js
+```js
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+require('dotenv').config();
+
+const authRoutes = require('./routes/auth');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.error(err));
+
+app.use('/api/auth', authRoutes);
+
+app.listen(process.env.PORT, () =>
+  console.log(`Server running on port ${process.env.PORT}`)
+);
+```
+
+---
+
+## 4. backend/models/User.js
+```js
+const mongoose = require('mongoose');
+
+const userSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true, trim: true },
+  email:    { type: String, required: true, unique: true, lowercase: true },
+  password: { type: String, required: true }
+}, { timestamps: true });
+
+module.exports = mongoose.model('User', userSchema);
+```
+
+---
+
+## 5. backend/middleware/auth.js
+```js
+const jwt = require('jsonwebtoken');
+
+module.exports = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ message: 'No token provided' });
+
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET);
+    next();
+  } catch {
+    res.status(401).json({ message: 'Invalid token' });
+  }
+};
+```
+
+---
+
+## 6. backend/routes/auth.js
+```js
+const express = require('express');
+const bcrypt  = require('bcryptjs');
+const jwt     = require('jsonwebtoken');
+const User    = require('../models/User');
+const protect = require('../middleware/auth');
+
+const router = express.Router();
+
+// SIGNUP
+router.post('/signup', async (req, res) => {
+  const { username, email, password } = req.body;
+  try {
+    const existing = await User.findOne({ email });
+    if (existing) return res.status(400).json({ message: 'Email already in use' });
+
+    const hashed = await bcrypt.hash(password, 10);
+    const user = await User.create({ username, email, password: hashed });
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    res.status(201).json({ token, user: { id: user._id, username, email } });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// LOGIN
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ message: 'Invalid credentials' });
+
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) return res.status(400).json({ message: 'Invalid credentials' });
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    res.json({ token, user: { id: user._id, username: user.username, email } });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// PROTECTED ROUTE
+router.get('/me', protect, async (req, res) => {
+  const user = await User.findById(req.user.id).select('-password');
+  res.json(user);
+});
+
+module.exports = router;
+```
+
+---
+
+## 7. frontend/package.json
+```json
+{
+  "name": "auth-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "axios": "^1.4.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.0.0",
+    "react-scripts": "5.0.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build"
+  },
+  "proxy": "http://localhost:5000"
+}
+```
+
+---
+
+## 8. frontend/public/index.html
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Auth App</title>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+```
+
+---
+
+## 9. frontend/src/index.js
+```js
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+```
+
+---
+
+## 10. frontend/src/AuthContext.js
+```js
+import { createContext, useContext, useState } from 'react';
+import axios from 'axios';
+
+const AuthContext = createContext();
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(() =>
+    JSON.parse(localStorage.getItem('user')) || null
+  );
+
+  const signup = async (data) => {
+    const res = await axios.post('/api/auth/signup', data);
+    localStorage.setItem('token', res.data.token);
+    localStorage.setItem('user', JSON.stringify(res.data.user));
+    setUser(res.data.user);
+  };
+
+  const login = async (data) => {
+    const res = await axios.post('/api/auth/login', data);
+    localStorage.setItem('token', res.data.token);
+    localStorage.setItem('user', JSON.stringify(res.data.user));
+    setUser(res.data.user);
+  };
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, signup, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export const useAuth = () => useContext(AuthContext);
+```
+
+---
+
+## 11. frontend/src/App.js
+```js
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './AuthContext';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import Dashboard from './pages/Dashboard';
+
+function PrivateRoute({ children }) {
+  const { user } = useAuth();
+  return user ? children : <Navigate to="/login" />;
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login"     element={<Login />} />
+          <Route path="/signup"    element={<Signup />} />
+          <Route path="/dashboard" element={
+            <PrivateRoute><Dashboard /></PrivateRoute>
+          } />
+          <Route path="*" element={<Navigate to="/login" />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}
+```
+
+---
+
+## 12. frontend/src/pages/Login.js
+```js
+import { useState } from 'react';
+import { useAuth } from '../AuthContext';
+import { useNavigate, Link } from 'react-router-dom';
+
+export default function Login() {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ email: '', password: '' });
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await login(form);
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Login failed');
+    }
+  };
+
+  return (
+    <div style={{ maxWidth: 360, margin: '80px auto', padding: '0 1rem' }}>
+      <h2>Login</h2>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      <form onSubmit={handleSubmit}>
+        <input type="email" placeholder="Email"
+          value={form.email}
+          onChange={e => setForm({ ...form, email: e.target.value })}
+          required style={{ display:'block', width:'100%', marginBottom:10 }} />
+        <input type="password" placeholder="Password"
+          value={form.password}
+          onChange={e => setForm({ ...form, password: e.target.value })}
+          required style={{ display:'block', width:'100%', marginBottom:10 }} />
+        <button type="submit">Login</button>
+      </form>
+      <p>No account? <Link to="/signup">Sign up</Link></p>
+    </div>
+  );
+}
+```
+
+---
+
+## 13. frontend/src/pages/Signup.js
+```js
+import { useState } from 'react';
+import { useAuth } from '../AuthContext';
+import { useNavigate, Link } from 'react-router-dom';
+
+export default function Signup() {
+  const { signup } = useAuth();
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ username: '', email: '', password: '' });
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await signup(form);
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Signup failed');
+    }
+  };
+
+  return (
+    <div style={{ maxWidth: 360, margin: '80px auto', padding: '0 1rem' }}>
+      <h2>Sign Up</h2>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      <form onSubmit={handleSubmit}>
+        <input type="text" placeholder="Username"
+          value={form.username}
+          onChange={e => setForm({ ...form, username: e.target.value })}
+          required style={{ display:'block', width:'100%', marginBottom:10 }} />
+        <input type="email" placeholder="Email"
+          value={form.email}
+          onChange={e => setForm({ ...form, email: e.target.value })}
+          required style={{ display:'block', width:'100%', marginBottom:10 }} />
+        <input type="password" placeholder="Password"
+          value={form.password}
+          onChange={e => setForm({ ...form, password: e.target.value })}
+          required style={{ display:'block', width:'100%', marginBottom:10 }} />
+        <button type="submit">Create Account</button>
+      </form>
+      <p>Have an account? <Link to="/login">Login</Link></p>
+    </div>
+  );
+}
+```
+
+---
+
+## 14. frontend/src/pages/Dashboard.js
+```js
+import { useAuth } from '../AuthContext';
+import { useNavigate } from 'react-router-dom';
+
+export default function Dashboard() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  return (
+    <div style={{ maxWidth: 400, margin: '80px auto', padding: '0 1rem' }}>
+      <h2>Dashboard</h2>
+      <p>Welcome, <strong>{user?.username}</strong>!</p>
+      <p style={{ color: '#666' }}>{user?.email}</p>
+      <button onClick={handleLogout} style={{ marginTop: 20 }}>Logout</button>
+    </div>
+  );
+}
+```
+
+---
+
+## Run
+```bash
+# Backend
+cd backend && npm install && npm run dev
+
+# Frontend
+cd frontend && npm install && npm start
+```
