@@ -1,0 +1,345 @@
+# Connect the Stack — All Code
+
+---
+
+## 1. backend/package.json
+```json
+{
+  "name": "connect-stack-backend",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": { "start": "node server.js", "dev": "nodemon server.js" },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
+    "express": "^4.18.2",
+    "mongoose": "^7.0.0"
+  }
+}
+```
+
+---
+
+## 2. backend/.env
+```
+MONGO_URI=mongodb://localhost:27017/connectstack
+PORT=5000
+```
+
+---
+
+## 3. backend/models/Item.js
+```js
+const mongoose = require('mongoose');
+
+const itemSchema = new mongoose.Schema({
+  title:       { type: String, required: true },
+  description: { type: String, default: '' },
+}, { timestamps: true });
+
+module.exports = mongoose.model('Item', itemSchema);
+```
+
+---
+
+## 4. backend/routes/itemRoutes.js
+```js
+const router = require('express').Router();
+const Item   = require('../models/Item');
+
+router.get('/', async (req, res) => {
+  try { res.json(await Item.find().sort({ createdAt: -1 })); }
+  catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.post('/', async (req, res) => {
+  try { res.status(201).json(await Item.create(req.body)); }
+  catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+router.put('/:id', async (req, res) => {
+  try {
+    const item = await Item.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!item) return res.status(404).json({ error: 'Not found' });
+    res.json(item);
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+router.delete('/:id', async (req, res) => {
+  try {
+    const item = await Item.findByIdAndDelete(req.params.id);
+    if (!item) return res.status(404).json({ error: 'Not found' });
+    res.json({ message: 'Deleted' });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+module.exports = router;
+```
+
+---
+
+## 5. backend/server.js
+```js
+require('dotenv').config();
+const express    = require('express');
+const mongoose   = require('mongoose');
+const cors       = require('cors');
+const itemRoutes = require('./routes/itemRoutes');
+
+const app = express();
+
+app.use(cors({ origin: 'http://localhost:3000' }));
+app.use(express.json());
+
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.log(err));
+
+app.use('/api/items', itemRoutes);
+
+// Health check
+app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+```
+
+---
+
+## 6. frontend/package.json
+```json
+{
+  "name": "connect-stack-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "axios": "^1.4.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build"
+  },
+  "proxy": "http://localhost:5000"
+}
+```
+
+> `"proxy": "http://localhost:5000"` — this is what connects the React frontend to the backend. All `/api/*` requests are forwarded automatically.
+
+---
+
+## 7. frontend/public/index.html
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Connect the Stack</title>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+```
+
+---
+
+## 8. frontend/src/index.js
+```js
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+```
+
+---
+
+## 9. frontend/src/api.js
+```js
+import axios from 'axios';
+
+// baseURL uses the proxy defined in package.json
+const API = axios.create({ baseURL: '/api/items' });
+
+export const getItems    = ()         => API.get('/');
+export const createItem  = (data)     => API.post('/', data);
+export const updateItem  = (id, data) => API.put(`/${id}`, data);
+export const deleteItem  = (id)       => API.delete(`/${id}`);
+```
+
+---
+
+## 10. frontend/src/hooks/useItems.js
+```js
+import { useState, useEffect } from 'react';
+import { getItems, createItem, updateItem, deleteItem } from '../api';
+
+export default function useItems() {
+  const [items, setItems]   = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]   = useState('');
+
+  const fetchAll = async () => {
+    try {
+      setLoading(true);
+      const { data } = await getItems();
+      setItems(data);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to fetch');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchAll(); }, []);
+
+  const add = async (data) => {
+    await createItem(data);
+    fetchAll();
+  };
+
+  const edit = async (id, data) => {
+    await updateItem(id, data);
+    fetchAll();
+  };
+
+  const remove = async (id) => {
+    await deleteItem(id);
+    fetchAll();
+  };
+
+  return { items, loading, error, add, edit, remove };
+}
+```
+
+---
+
+## 11. frontend/src/components/ItemForm.js
+```js
+import React, { useState, useEffect } from 'react';
+
+const empty = { title: '', description: '' };
+
+export default function ItemForm({ onSubmit, editing, onCancel }) {
+  const [form, setForm] = useState(empty);
+
+  useEffect(() => {
+    setForm(editing ? { title: editing.title, description: editing.description } : empty);
+  }, [editing]);
+
+  const handle = e => setForm({ ...form, [e.target.name]: e.target.value });
+
+  const submit = e => {
+    e.preventDefault();
+    onSubmit(form);
+    setForm(empty);
+  };
+
+  return (
+    <form onSubmit={submit} style={{ marginBottom: 24 }}>
+      <h3>{editing ? 'Edit Item' : 'Add Item'}</h3>
+      <input
+        name="title" placeholder="Title" value={form.title}
+        onChange={handle} required style={{ marginRight: 8 }}
+      />
+      <input
+        name="description" placeholder="Description" value={form.description}
+        onChange={handle} style={{ marginRight: 8 }}
+      />
+      <button type="submit">{editing ? 'Update' : 'Add'}</button>
+      {editing && (
+        <button type="button" onClick={onCancel} style={{ marginLeft: 8 }}>Cancel</button>
+      )}
+    </form>
+  );
+}
+```
+
+---
+
+## 12. frontend/src/components/ItemList.js
+```js
+import React from 'react';
+
+export default function ItemList({ items, onEdit, onDelete }) {
+  if (!items.length) return <p>No items yet.</p>;
+
+  return (
+    <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <thead>
+        <tr><th>Title</th><th>Description</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        {items.map(item => (
+          <tr key={item._id}>
+            <td>{item.title}</td>
+            <td>{item.description}</td>
+            <td>
+              <button onClick={() => onEdit(item)}>Edit</button>
+              <button onClick={() => onDelete(item._id)} style={{ marginLeft: 8 }}>Delete</button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+```
+
+---
+
+## 13. frontend/src/App.js
+```js
+import React, { useState } from 'react';
+import useItems from './hooks/useItems';
+import ItemForm from './components/ItemForm';
+import ItemList from './components/ItemList';
+
+export default function App() {
+  const { items, loading, error, add, edit, remove } = useItems();
+  const [editing, setEditing] = useState(null);
+
+  const handleSubmit = async (form) => {
+    if (editing) {
+      await edit(editing._id, form);
+      setEditing(null);
+    } else {
+      await add(form);
+    }
+  };
+
+  return (
+    <div style={{ maxWidth: 800, margin: '40px auto', fontFamily: 'sans-serif', padding: '0 16px' }}>
+      <h2>Connect the Stack</h2>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      <ItemForm onSubmit={handleSubmit} editing={editing} onCancel={() => setEditing(null)} />
+      {loading ? <p>Loading...</p> : <ItemList items={items} onEdit={setEditing} onDelete={remove} />}
+    </div>
+  );
+}
+```
+
+---
+
+## How the Connection Works
+
+| What | How |
+|---|---|
+| Proxy | `"proxy": "http://localhost:5000"` in frontend `package.json` forwards `/api/*` to backend |
+| CORS | Backend allows `http://localhost:3000` via `cors()` |
+| Axios baseURL | `/api/items` — relative, works with proxy in dev |
+| Custom Hook | `useItems.js` centralises all API calls and state |
+
+---
+
+## Run
+```bash
+# Backend
+cd backend && npm install && npm run dev
+
+# Frontend
+cd frontend && npm install && npm start
+```
